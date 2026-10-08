@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>โปรไฟล์ – Watsup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" style="padding-bottom:80px;">
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <span style="font-size:1.15rem;font-weight:900;">โปรไฟล์ของฉัน</span>
+    <div class="top-bar-actions">
+      <button class="icon-btn" onclick="showToast('การตั้งค่าบัญชี')">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+      <a href="chat.html" class="icon-btn">
+        <i class="fa-solid fa-paper-plane"></i>
+        <div class="badge">6</div>
+      </a>
+    </div>
+  </header>
+
+  <!-- Profile Hero Section -->
+  <div class="profile-hero">
+    <div style="position:relative;">
+      <div class="profile-avatar">
+        <i class="fa-solid fa-user" style="color:var(--lime);font-size:2.5rem;"></i>
+      </div>
+      <button class="icon-btn" style="position:absolute;bottom:0;right:0;width:28px;height:28px;background:var(--lime);color:#000;" onclick="showToast('เปลี่ยนรูปโปรไฟล์')">
+        <i class="fa-solid fa-camera" style="font-size:0.75rem;"></i>
+      </button>
+    </div>
+    <div class="profile-name">Sanch T.</div>
+    <div class="profile-handle">@sxnzboi</div>
+    <div class="profile-bio">ชอบเล่นเกม 🎮 | เล่นดนตรี 🎵 | ชวนตีแบดได้เสมอ 🏸</div>
+
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div style="font-size:1.2rem;font-weight:900;">128</div>
+        <div style="font-size:0.7rem;color:var(--white-70);font-weight:700;">โพสต์</div>
+      </div>
+      <div class="profile-stat">
+        <div style="font-size:1.2rem;font-weight:900;">1.2K</div>
+        <div style="font-size:0.7rem;color:var(--white-70);font-weight:700;">กำลังติดตาม</div>
+      </div>
+      <div class="profile-stat">
+        <div style="font-size:1.2rem;font-weight:900;">847</div>
+        <div style="font-size:0.7rem;color:var(--white-70);font-weight:700;">ผู้ติดตาม</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;padding:20px;">
+    <button class="btn-primary" style="flex:1;padding:12px;" onclick="showToast('เปิดหน้าแก้ไขข้อมูล')">
+      <i class="fa-solid fa-pen-to-square"></i> แก้ไขโปรไฟล์
+    </button>
+    <button class="btn-ghost" style="flex:1;padding:12px;" onclick="showToast('คัดลอกลิงก์โปรไฟล์แล้ว!')">
+      <i class="fa-solid fa-share-nodes"></i> แชร์โปรไฟล์
+    </button>
+  </div>
+
+  <!-- Interests -->
+  <div style="padding:0 20px;">
+    <div class="section-title" style="padding:0 0 12px;">
+      <h3>ความสนใจของฉัน</h3>
+    </div>
+    <div class="interest-chips" id="interest-chips"></div>
+  </div>
+
+  <!-- Settings List -->
+  <div style="padding:20px;">
+    <div class="section-title" style="padding:0 0 12px;">
+      <h3>ตั้งค่าความเป็นส่วนตัว</h3>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="settings-item" onclick="showToast('การตั้งค่าตำแหน่ง GPS')">
+        <div class="settings-item-icon" style="background:rgba(108,99,255,0.2);color:var(--purple-light);">
+          <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <span>ตำแหน่งที่แสดงในเรดาร์</span>
+        <i class="fa-solid fa-chevron-right" style="color:var(--white-40);"></i>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-icon" style="background:rgba(74,222,128,0.2);color:var(--success);">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+        <span>การแจ้งเตือนข้อความ</span>
+        <div class="toggle on" onclick="this.classList.toggle('on');showToast('เปลี่ยนการตั้งค่าแจ้งเตือน');"></div>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-icon" style="background:rgba(236,72,153,0.2);color:#EC4899;">
+          <i class="fa-solid fa-eye"></i>
+        </div>
+        <span>แสดงสถานะออนไลน์</span>
+        <div class="toggle on" onclick="this.classList.toggle('on');showToast('เปลี่ยนสถานะการมองเห็น');"></div>
+      </div>
+
+      <a href="login.html" class="settings-item" style="color:var(--danger);">
+        <div class="settings-item-icon" style="background:rgba(255,101,132,0.2);color:var(--danger);">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </div>
+        <span style="color:var(--danger);">ออกจากระบบ</span>
+        <i class="fa-solid fa-chevron-right" style="color:var(--danger);"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-item">
+      <i class="fa-solid fa-house"></i>
+      <span>หน้าหลัก</span>
+    </a>
+    <a href="radar.html" class="nav-item">
+      <i class="fa-solid fa-radar"></i>
+      <span>ใกล้เคียง</span>
+      <div class="nav-dot"></div>
+    </a>
+    <a href="activities.html" class="nav-item">
+      <i class="fa-solid fa-fire-flame-curved"></i>
+      <span>กิจกรรม</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>โปรไฟล์</span>
+    </a>
+  </nav>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const INTERESTS = [
+  { icon:'fa-gamepad', label:'Gaming', color:'#A855F7', active:true  },
+  { icon:'fa-music',   label:'Music',  color:'#EC4899', active:true  },
+  { icon:'fa-futbol',  label:'Sport',  color:'#22C55E', active:false },
+  { icon:'fa-book-open',label:'Study', color:'#06B6D4', active:true  },
+  { icon:'fa-plane',   label:'Travel', color:'#FBBF24', active:false },
+  { icon:'fa-utensils',label:'Food',   color:'#F97316', active:true  },
+  { icon:'fa-camera',  label:'Photo',  color:'#8B5CF6', active:false },
+];
+
+function renderInterests() {
+  const container = document.getElementById('interest-chips');
+  container.innerHTML = INTERESTS.map(i => `
+    <div class="interest-chip ${i.active ? 'active-chip' : ''}" onclick="toggleInterest(this, '${i.label}')">
+      <i class="fa-solid ${i.icon}" style="color:${i.active ? 'var(--lime)' : i.color}"></i>
+      <span>${i.label}</span>
+    </div>
+  `).join('');
+}
+
+function toggleInterest(el, label) {
+  el.classList.toggle('active-chip');
+  showToast(`ปรับเปลี่ยนความสนใจ: ${label}`);
+}
+
+document.addEventListener('DOMContentLoaded', renderInterests);
+</script>
+</body>
+</html>

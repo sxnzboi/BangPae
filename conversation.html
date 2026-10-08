@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>สนทนา – Watsup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" style="height:100dvh;display:flex;flex-direction:column;overflow:hidden;">
+
+  <!-- Conversation Top Bar -->
+  <header class="convo-top-bar">
+    <a href="chat.html" class="icon-btn" style="width:36px;height:36px;">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;flex:1;">
+      <div class="convo-avatar" id="convo-avatar">
+        <i class="fa-solid fa-user" id="convo-user-icon"></i>
+        <div class="status-dot dot-green" id="convo-status-dot"></div>
+      </div>
+      <div>
+        <div style="font-size:0.95rem;font-weight:800;" id="convo-name">NimAura</div>
+        <div style="font-size:0.72rem;color:var(--success);font-weight:600;" id="convo-status">
+          <i class="fa-solid fa-circle" style="font-size:0.45rem;"></i> ออนไลน์อยู่
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;">
+      <button class="icon-btn" style="width:36px;height:36px;" onclick="showToast('กำลังโทรด้วยเสียง...')">
+        <i class="fa-solid fa-phone"></i>
+      </button>
+      <button class="icon-btn" style="width:36px;height:36px;" onclick="showToast('กำลังโทรแบบวิดีโอคอล...')">
+        <i class="fa-solid fa-video"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Messages History -->
+  <main class="messages-area" id="messages-area"></main>
+
+  <!-- Quick Reactions -->
+  <div class="quick-reactions">
+    <button class="quick-react-btn" onclick="sendQuickReact('สนใจเลย!')">
+      <i class="fa-solid fa-heart" style="color:var(--danger);"></i> สนใจ!
+    </button>
+    <button class="quick-react-btn" onclick="sendQuickReact('โอเคเลย!')">
+      <i class="fa-solid fa-thumbs-up" style="color:var(--lime);"></i> โอเค!
+    </button>
+    <button class="quick-react-btn" onclick="sendQuickReact('อยู่ตรงไหน?')">
+      <i class="fa-solid fa-location-dot" style="color:var(--purple-light);"></i> ตรงไหน?
+    </button>
+    <button class="quick-react-btn" onclick="sendQuickReact('กี่โมง?')">
+      <i class="fa-solid fa-clock" style="color:#FBBF24;"></i> กี่โมง?
+    </button>
+    <button class="quick-react-btn" onclick="sendQuickReact('ได้เลย!')">
+      <i class="fa-solid fa-check" style="color:var(--success);"></i> ได้เลย!
+    </button>
+  </div>
+
+  <!-- Chat Input Bar -->
+  <footer class="chat-input-bar">
+    <div class="chat-input-wrap">
+      <button type="button" class="icon-btn" style="width:32px;height:32px;background:none;" onclick="showToast('แนบรูปภาพหรือพิกัด')">
+        <i class="fa-solid fa-paperclip" style="color:var(--white-70);"></i>
+      </button>
+      <textarea class="chat-input-field" id="chat-input" placeholder="พิมพ์ข้อความ..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button type="button" class="icon-btn" style="width:32px;height:32px;background:none;" onclick="showToast('สติ๊กเกอร์')">
+        <i class="fa-solid fa-face-smile" style="color:var(--white-70);"></i>
+      </button>
+    </div>
+    <button class="send-btn" onclick="sendMessage()">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </footer>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const chatId = parseInt(urlParams.get('id')) || 1;
+const currentConvo = CHAT_LIST_DATA.find(c => c.id === chatId) || CHAT_LIST_DATA[0];
+
+function loadConversation() {
+  document.getElementById('convo-name').textContent = currentConvo.name;
+  const avatarBox = document.getElementById('convo-avatar');
+  avatarBox.style.background = currentConvo.color + '22';
+  document.getElementById('convo-user-icon').className = `fa-solid ${currentConvo.icon}`;
+  document.getElementById('convo-user-icon').style.color = currentConvo.color;
+
+  const dot = document.getElementById('convo-status-dot');
+  dot.className = `status-dot ${currentConvo.status === 'online' ? 'dot-green' : currentConvo.status === 'away' ? 'dot-yellow' : 'dot-gray'}`;
+
+  document.getElementById('convo-status').innerHTML = currentConvo.status === 'online'
+    ? '<i class="fa-solid fa-circle" style="font-size:0.45rem;"></i> ออนไลน์อยู่'
+    : '<span style="color:var(--white-40);">ออฟไลน์</span>';
+
+  renderMessages();
+}
+
+function renderMessages() {
+  const area = document.getElementById('messages-area');
+  area.innerHTML = '<div class="msg-date-label">วันนี้</div>' + currentConvo.messages.map(m => {
+    const isMe = m.from === 'me';
+    return `
+      <div class="msg-row ${isMe ? 'me' : ''}">
+        ${!isMe ? `<div class="msg-bubble-avatar" style="background:${currentConvo.color}22">
+          <i class="fa-solid ${currentConvo.icon}" style="font-size:.8rem;color:${currentConvo.color}"></i>
+        </div>` : ''}
+        <div>
+          <div class="msg-bubble">${m.text}</div>
+          <div class="msg-time">
+            ${m.time}
+            ${isMe ? '<i class="fa-solid fa-check-double" style="color:var(--lime);"></i>' : ''}
+          </div>
+        </div>
+        ${isMe ? `<div class="msg-bubble-avatar" style="background:var(--purple-mid)">
+          <i class="fa-solid fa-user" style="font-size:.8rem;color:var(--purple-light)"></i>
+        </div>` : ''}
+      </div>
+    `;
+  }).join('');
+  area.scrollTop = area.scrollHeight;
+}
+
+function sendMessage(text) {
+  const input = document.getElementById('chat-input');
+  const val = text || input.value.trim();
+  if (!val) return;
+
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  currentConvo.messages.push({ from: 'me', text: val, time: timeStr });
+  currentConvo.lastMsg = val;
+  input.value = '';
+  renderMessages();
+
+  // Simulate automatic friend reply
+  setTimeout(() => {
+    const replies = ['โอเคเลย!', 'เจอกันนะ!', 'กำลังไปเลย!', 'รับทราบครับ', 'ดีเลยยย'];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    const replyNow = new Date();
+    const replyTime = `${replyNow.getHours()}:${String(replyNow.getMinutes()).padStart(2, '0')}`;
+
+    currentConvo.messages.push({ from: 'them', text: reply, time: replyTime });
+    currentConvo.lastMsg = reply;
+    renderMessages();
+  }, 1200);
+}
+
+function sendQuickReact(text) {
+  sendMessage(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadConversation);
+</script>
+</body>
+</html>

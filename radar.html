@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nearby Friends Radar – Watsup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" style="padding-bottom:80px;">
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-bar-logo">
+      <i class="fa-solid fa-radar" style="font-size:1.3rem;color:var(--lime);"></i>
+      <span style="font-size:1.2rem;font-weight:900;margin-left:8px;">Nearby Radar</span>
+    </div>
+    <div class="top-bar-actions">
+      <button class="icon-btn" onclick="showToast('ปรับระยะค้นหา')">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+      <a href="chat.html" class="icon-btn">
+        <i class="fa-solid fa-paper-plane"></i>
+        <div class="badge">6</div>
+      </a>
+    </div>
+  </header>
+
+  <div class="radar-header">
+    <h2>เพื่อนใกล้เคียง</h2>
+    <p>ค้นหาเพื่อนใหม่ในระยะ 5 กิโลเมตร</p>
+  </div>
+
+  <!-- Radar Animation Screen -->
+  <div class="radar-viz-wrap">
+    <div class="radar-container" id="radar-container">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-sweep"></div>
+      <div class="radar-center">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
+      <!-- Pings will be injected via JS -->
+    </div>
+  </div>
+
+  <!-- Radar Statistics -->
+  <div class="radar-stats">
+    <div class="radar-stat-card">
+      <i class="fa-solid fa-users"></i>
+      <div class="stat-num">24</div>
+      <div class="stat-desc">คนใกล้เคียง</div>
+    </div>
+    <div class="radar-stat-card">
+      <i class="fa-solid fa-circle-dot" style="color:var(--success);"></i>
+      <div class="stat-num">12</div>
+      <div class="stat-desc">ออนไลน์ตอนนี้</div>
+    </div>
+    <div class="radar-stat-card">
+      <i class="fa-solid fa-route" style="color:var(--purple-light);"></i>
+      <div class="stat-num">0.4<small style="font-size:.7rem;">km</small></div>
+      <div class="stat-desc">ใกล้ที่สุด</div>
+    </div>
+  </div>
+
+  <!-- Nearby Friends List -->
+  <div class="section-title">
+    <h3>เพื่อนใกล้คุณ</h3>
+    <a href="#" style="color:var(--lime);font-size:0.8rem;font-weight:700;" onclick="showToast('รีเฟรชตำแหน่งแล้ว')">รีเฟรช</a>
+  </div>
+
+  <div class="nearby-list" id="nearby-list"></div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-item">
+      <i class="fa-solid fa-house"></i>
+      <span>หน้าหลัก</span>
+    </a>
+    <a href="radar.html" class="nav-item active">
+      <i class="fa-solid fa-radar"></i>
+      <span>ใกล้เคียง</span>
+      <div class="nav-dot"></div>
+    </a>
+    <a href="activities.html" class="nav-item">
+      <i class="fa-solid fa-fire-flame-curved"></i>
+      <span>กิจกรรม</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>โปรไฟล์</span>
+    </a>
+  </nav>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+function renderRadar() {
+  const container = document.getElementById('radar-container');
+  const pings = [
+    { top:'28%', left:'58%', idx:0 },
+    { top:'45%', left:'75%', idx:1 },
+    { top:'65%', left:'62%', idx:2 },
+    { top:'72%', left:'38%', idx:3 },
+    { top:'35%', left:'30%', idx:4 },
+    { top:'55%', left:'20%', idx:5 },
+  ];
+
+  pings.forEach((p, i) => {
+    const friend = NEARBY_FRIENDS[i];
+    const div = document.createElement('div');
+    div.className = 'radar-ping';
+    div.style.top  = p.top;
+    div.style.left = p.left;
+    div.innerHTML = `
+      <div class="radar-ping-dot" style="background:${friend?.color||'var(--purple-primary)'}33;border-color:${friend?.color||'var(--purple-primary)'}"
+           onclick="showToast('${friend?.name || 'User'} · ${friend?.dist || ''}')">
+        <i class="fa-solid ${friend?.icon||'fa-user'}" style="font-size:.75rem;color:${friend?.color||'var(--white)'}"></i>
+      </div>
+      <div class="radar-ping-pulse"></div>
+    `;
+    container.appendChild(div);
+  });
+
+  const list = document.getElementById('nearby-list');
+  list.innerHTML = NEARBY_FRIENDS.map((f, index) => `
+    <div class="nearby-card">
+      <div class="nearby-avatar" style="background:${f.color}22">
+        <i class="fa-solid ${f.icon}" style="font-size:1.3rem;color:${f.color}"></i>
+        <div class="nearby-online-dot ${f.status==='online'?'dot-green':f.status==='away'?'dot-yellow':'dot-gray'}"></div>
+      </div>
+      <div class="nearby-info">
+        <div class="nearby-name">${f.name}</div>
+        <div class="nearby-sub">
+          <i class="fa-solid fa-location-dot"></i> ${f.dist}
+          <span class="distance-tag"><i class="fa-solid fa-star"></i> ${f.match}% Match</span>
+        </div>
+        <div class="nearby-sub" style="margin-top:2px;">
+          <i class="fa-solid fa-tag"></i> ${f.activity}
+        </div>
+      </div>
+      <div class="nearby-actions">
+        <a href="conversation.html?id=${index + 1}" class="nearby-action-btn msg">
+          <i class="fa-solid fa-comment"></i>
+        </a>
+        <button class="nearby-action-btn add" onclick="showToast('ส่งคำขอเป็นเพื่อนถึง ${f.name} แล้ว!')">
+          <i class="fa-solid fa-user-plus"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', renderRadar);
+</script>
+</body>
+</html>

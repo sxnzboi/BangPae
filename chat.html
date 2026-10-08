@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ข้อความแชท – Watsup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" style="padding-bottom:20px;">
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="feed.html" class="icon-btn">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <span style="font-size:1.2rem;font-weight:900;">ข้อความแชท</span>
+    </div>
+    <div class="top-bar-actions">
+      <button class="icon-btn" onclick="showToast('สร้างกลุ่มสนทนาใหม่')">
+        <i class="fa-solid fa-user-group"></i>
+      </button>
+      <button class="icon-btn" onclick="showToast('เริ่มแชทใหม่')">
+        <i class="fa-solid fa-pen-to-square"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Online Friends Row -->
+  <div class="section-title" style="padding:16px 20px 8px;">
+    <h3>เพื่อนที่ออนไลน์</h3>
+  </div>
+  <div class="online-scroll" id="online-scroll"></div>
+
+  <!-- Search -->
+  <div class="search-bar" style="margin-bottom:12px;">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" placeholder="ค้นหาบทสนทนา..." oninput="filterChats(this.value)" />
+  </div>
+
+  <!-- Chat List -->
+  <div class="chat-list" id="chat-list"></div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+function renderChatList(chats) {
+  const onlineScroll = document.getElementById('online-scroll');
+  const onlineFriends = NEARBY_FRIENDS.filter(f => f.status === 'online');
+
+  onlineScroll.innerHTML = onlineFriends.map((f, idx) => `
+    <a href="conversation.html?id=${idx+1}" class="online-friend">
+      <div class="online-friend-avatar" style="background:${f.color}22;border-color:${f.color}">
+        <i class="fa-solid ${f.icon}" style="font-size:1.2rem;color:${f.color}"></i>
+        <div class="dot"></div>
+      </div>
+      <div class="online-friend-name">${f.name}</div>
+    </a>
+  `).join('');
+
+  const list = document.getElementById('chat-list');
+  const data = chats || CHAT_LIST_DATA;
+
+  list.innerHTML = data.map(c => `
+    <a href="conversation.html?id=${c.id}" class="chat-item">
+      <div class="chat-avatar" style="background:${c.color}22">
+        <i class="fa-solid ${c.icon}" style="font-size:1.3rem;color:${c.color}"></i>
+        <div class="status-dot ${c.status==='online'?'dot-green':c.status==='away'?'dot-yellow':'dot-gray'}"></div>
+      </div>
+      <div class="chat-info">
+        <div class="chat-top-row">
+          <div class="chat-name">${c.name}</div>
+          <div class="chat-time">${c.time}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div class="chat-last-msg">${c.lastMsg}</div>
+          ${c.unread > 0 ? `<div class="unread-badge ${c.unread > 2 ? 'lime-badge' : ''}">${c.unread}</div>` : ''}
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function filterChats(q) {
+  const filtered = CHAT_LIST_DATA.filter(c =>
+    c.name.toLowerCase().includes(q.toLowerCase()) ||
+    c.lastMsg.toLowerCase().includes(q.toLowerCase())
+  );
+  renderChatList(filtered);
+}
+
+document.addEventListener('DOMContentLoaded', () => renderChatList());
+</script>
+</body>
+</html>

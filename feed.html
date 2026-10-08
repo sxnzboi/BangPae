@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>หน้าหลัก Feed – Watsup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app" style="padding-bottom:80px;">
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-bar-logo">
+      <div class="logo-icon">
+        <i class="fa-solid fa-comments"></i>
+      </div>
+      <span>Watsup</span>
+    </div>
+    <div class="top-bar-actions">
+      <button class="icon-btn" onclick="showToast('การแจ้งเตือนใหม่ 3 รายการ')">
+        <i class="fa-solid fa-bell"></i>
+        <div class="badge">3</div>
+      </button>
+      <a href="chat.html" class="icon-btn">
+        <i class="fa-solid fa-paper-plane"></i>
+        <div class="badge">6</div>
+      </a>
+    </div>
+  </header>
+
+  <!-- Stories Row -->
+  <div class="stories-row" id="stories-row">
+    <div class="story-item" onclick="showToast('เพิ่มสตอรี่ใหม่ของคุณ')">
+      <div class="story-ring add-new">
+        <div class="story-avatar">
+          <i class="fa-solid fa-plus" style="color:var(--lime);font-size:0.9rem;"></i>
+        </div>
+      </div>
+      <div class="story-name">ของฉัน</div>
+    </div>
+  </div>
+
+  <!-- Activity Chips Filter -->
+  <div class="chip-row" id="chip-row">
+    <div class="chip active" onclick="filterFeed(this, 'all')">
+      <i class="fa-solid fa-globe"></i> ทั้งหมด
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'gaming')">
+      <i class="fa-solid fa-gamepad"></i> Gaming
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'sport')">
+      <i class="fa-solid fa-futbol"></i> Sport
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'food')">
+      <i class="fa-solid fa-utensils"></i> Food
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'music')">
+      <i class="fa-solid fa-music"></i> Music
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'hangout')">
+      <i class="fa-solid fa-martini-glass"></i> Hangout
+    </div>
+    <div class="chip" onclick="filterFeed(this, 'study')">
+      <i class="fa-solid fa-book-open"></i> Study
+    </div>
+  </div>
+
+  <!-- Threads Feed -->
+  <main class="feed-list" id="feed-list"></main>
+
+  <!-- FAB Button -->
+  <button class="fab" onclick="showToast('เปิดตัวสร้างโพสต์หาเพื่อน')">
+    <i class="fa-solid fa-pen"></i>
+  </button>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="feed.html" class="nav-item active">
+      <i class="fa-solid fa-house"></i>
+      <span>หน้าหลัก</span>
+    </a>
+    <a href="radar.html" class="nav-item">
+      <i class="fa-solid fa-radar"></i>
+      <span>ใกล้เคียง</span>
+      <div class="nav-dot"></div>
+    </a>
+    <a href="activities.html" class="nav-item">
+      <i class="fa-solid fa-fire-flame-curved"></i>
+      <span>กิจกรรม</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <i class="fa-solid fa-circle-user"></i>
+      <span>โปรไฟล์</span>
+    </a>
+  </nav>
+
+</div>
+
+<script src="js/data.js"></script>
+<script>
+let currentFilter = 'all';
+let postLikes = {};
+
+function renderStories() {
+  const row = document.getElementById('stories-row');
+  const myStory = row.querySelector('.story-item');
+  const extras = STORY_USERS.map(u => `
+    <div class="story-item" onclick="showToast('สตอรี่ของ ${u.name}')">
+      <div class="story-ring ${u.online ? '' : 'add-new'}">
+        <div class="story-avatar" style="background:${u.color}22">
+          <i class="fa-solid ${u.icon}" style="font-size:1.2rem;color:${u.color}"></i>
+        </div>
+      </div>
+      <div class="story-name">${u.name}</div>
+    </div>
+  `).join('');
+  row.innerHTML = myStory.outerHTML + extras;
+}
+
+function renderFeed(filter = 'all') {
+  const list = document.getElementById('feed-list');
+  const posts = filter === 'all' ? POSTS : POSTS.filter(p => p.activity === filter);
+
+  list.innerHTML = posts.map(p => `
+    <article class="thread-post">
+      <div class="post-avatar-col">
+        <div class="post-avatar">
+          <i class="fa-solid ${p.avatar}" style="font-size:1.2rem;color:var(--purple-light);"></i>
+          ${p.online ? '<div class="online-dot"></div>' : ''}
+        </div>
+        <div class="thread-line"></div>
+      </div>
+      <div class="post-content-col">
+        <div class="post-header">
+          <div class="post-username">
+            ${p.user}
+            ${p.verified ? '<i class="fa-solid fa-circle-check" style="color:var(--purple-light);font-size:.75rem;margin-left:3px"></i>' : ''}
+          </div>
+          <div class="post-time">${p.time}</div>
+        </div>
+        <div class="post-activity-tag">
+          <i class="fa-solid ${ACTIVITIES.find(a=>a.id===p.activity)?.icon || 'fa-star'}"></i>
+          ${p.activityLabel}
+        </div>
+        <div class="post-text">${p.text}</div>
+        <div class="post-meta-row">
+          <div class="post-meta-badge">
+            <i class="fa-solid fa-location-dot"></i> ${p.location}
+          </div>
+        </div>
+        ${p.hasImg ? `
+        <div class="post-img" style="background:${p.imgBg||'var(--purple-mid)'}">
+          <i class="fa-solid ${p.imgIcon||'fa-image'}" style="font-size:2.5rem;color:var(--white-40);"></i>
+        </div>` : ''}
+        <div class="post-actions">
+          <button class="action-btn ${postLikes[p.id] ? 'liked' : ''}" onclick="toggleLike(${p.id}, this)">
+            <i class="fa-${postLikes[p.id] ? 'solid' : 'regular'} fa-heart"></i>
+            <span>${p.likes + (postLikes[p.id] ? 1 : 0)}</span>
+          </button>
+          <button class="action-btn" onclick="openComments(${p.id})">
+            <i class="fa-solid fa-comment"></i>
+            <span id="comment-count-${p.id}">${(p.commentList ? p.commentList.length : p.comments)}</span>
+          </button>
+          <button class="action-btn" onclick="showToast('แชร์ Repost สำเร็จ!')">
+            <i class="fa-solid fa-retweet"></i>
+            <span>${p.reposts}</span>
+          </button>
+          <a href="conversation.html?id=1" class="action-btn">
+            <i class="fa-solid fa-paper-plane"></i>
+          </a>
+          <button class="action-btn" style="margin-left:auto" onclick="showToast('บันทึกโพสต์แล้ว')">
+            <i class="fa-solid fa-bookmark"></i>
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+function filterFeed(el, filter) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filter;
+  renderFeed(filter);
+}
+
+function toggleLike(id, btn) {
+  postLikes[id] = !postLikes[id];
+  renderFeed(currentFilter);
+}
+
+/* ═══════════════════════════════════════════
+   COMMENT FEATURE LOGIC
+═══════════════════════════════════════════ */
+let activeCommentPostId = null;
+
+function openComments(postId) {
+  activeCommentPostId = postId;
+  const post = POSTS.find(p => p.id === postId);
+  if (!post) return;
+
+  if (!post.commentList) {
+    post.commentList = [];
+  }
+
+  const overlay = document.getElementById('comment-overlay');
+  overlay.classList.add('open');
+  renderCommentsList(post);
+  setTimeout(() => {
+    document.getElementById('comment-input')?.focus();
+  }, 300);
+}
+
+function closeComments() {
+  const overlay = document.getElementById('comment-overlay');
+  overlay.classList.remove('open');
+  activeCommentPostId = null;
+}
+
+function renderCommentsList(post) {
+  const listEl = document.getElementById('comment-list');
+  const countEl = document.getElementById('modal-comment-count');
+  countEl.textContent = `(${post.commentList.length})`;
+
+  if (post.commentList.length === 0) {
+    listEl.innerHTML = `
+      <div class="comment-empty">
+        <i class="fa-regular fa-comments" style="font-size:2rem;margin-bottom:8px;display:block;color:var(--white-40);"></i>
+        ยังไม่มีความคิดเห็น เป็นคนแรกที่เริ่มพูดคุยเลย!
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = post.commentList.map(c => `
+    <div class="comment-item">
+      <div class="comment-avatar">
+        <i class="fa-solid ${c.avatar || 'fa-user'}" style="color:var(--purple-light);font-size:0.95rem;"></i>
+      </div>
+      <div class="comment-bubble">
+        <div class="comment-meta">
+          <span class="comment-user">${c.user}</span>
+          <span class="comment-time">${c.time}</span>
+        </div>
+        <div class="comment-content">${c.text}</div>
+      </div>
+    </div>
+  `).join('');
+
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+function submitComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text || activeCommentPostId === null) return;
+
+  const post = POSTS.find(p => p.id === activeCommentPostId);
+  if (!post) return;
+
+  if (!post.commentList) post.commentList = [];
+
+  const newComment = {
+    id: Date.now(),
+    user: 'Sanch T.',
+    avatar: 'fa-user',
+    time: 'เมื่อกี้',
+    text: text
+  };
+
+  post.commentList.push(newComment);
+  post.comments = post.commentList.length;
+
+  input.value = '';
+  renderCommentsList(post);
+
+  // Update comment counter on feed
+  const badge = document.getElementById(`comment-count-${post.id}`);
+  if (badge) badge.textContent = post.commentList.length;
+
+  showToast('เพิ่มความคิดเห็นแล้ว!');
+}
+
+function handleCommentKey(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitComment();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderStories();
+  renderFeed('all');
+});
+</script>
+
+<!-- Comments Bottom Sheet Modal -->
+<div class="comment-overlay" id="comment-overlay" onclick="if(event.target===this) closeComments();">
+  <div class="comment-sheet">
+    <div class="comment-handle"></div>
+    <div class="comment-header">
+      <h3>
+        <i class="fa-solid fa-comments" style="color:var(--lime);"></i>
+        ความคิดเห็น <span id="modal-comment-count" style="font-size:0.85rem;color:var(--white-40);font-weight:600;">(0)</span>
+      </h3>
+      <button class="icon-btn" style="width:32px;height:32px;" onclick="closeComments()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Scrollable Comments -->
+    <div class="comment-list" id="comment-list"></div>
+
+    <!-- Input Bar -->
+    <div class="comment-input-bar">
+      <input type="text" id="comment-input" placeholder="เขียนความคิดเห็นของคุณ..." onkeydown="handleCommentKey(event)" />
+      <button class="comment-send-btn" onclick="submitComment()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+
