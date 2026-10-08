@@ -74,7 +74,7 @@
   <main class="feed-list" id="feed-list"></main>
 
   <!-- FAB Button -->
-  <button class="fab" onclick="showToast('เปิดตัวสร้างโพสต์หาเพื่อน')">
+  <button class="fab" onclick="openComposer()">
     <i class="fa-solid fa-pen"></i>
   </button>
 
@@ -85,7 +85,7 @@
       <span>หน้าหลัก</span>
     </a>
     <a href="radar.html" class="nav-item">
-      <i class="fa-solid fa-radar"></i>
+      <i class="fa-solid fa-compass"></i>
       <span>ใกล้เคียง</span>
       <div class="nav-dot"></div>
     </a>
@@ -149,13 +149,20 @@ function renderFeed(filter = 'all') {
         </div>
         <div class="post-text">${p.text}</div>
         <div class="post-meta-row">
+          <div class="post-distance-badge">
+            <i class="fa-solid fa-location-crosshairs"></i> ${p.distance || '0.5 km'}
+          </div>
           <div class="post-meta-badge">
-            <i class="fa-solid fa-location-dot"></i> ${p.location}
+            <i class="fa-solid fa-location-dot"></i> ${p.location || 'ใกล้คุณ'}
           </div>
         </div>
         ${p.hasImg ? `
-        <div class="post-img" style="background:${p.imgBg||'var(--purple-mid)'}">
-          <i class="fa-solid ${p.imgIcon||'fa-image'}" style="font-size:2.5rem;color:var(--white-40);"></i>
+        <div class="post-img">
+          ${p.imgSrc ? `<img src="${p.imgSrc}" alt="รูปภาพโพสต์" />` : `
+            <div style="width:100%;height:100%;min-height:160px;background:${p.imgBg||'var(--purple-mid)'};display:flex;align-items:center;justify-content:center;">
+              <i class="fa-solid ${p.imgIcon||'fa-image'}" style="font-size:2.5rem;color:var(--white-40);"></i>
+            </div>
+          `}
         </div>` : ''}
         <div class="post-actions">
           <button class="action-btn ${postLikes[p.id] ? 'liked' : ''}" onclick="toggleLike(${p.id}, this)">
@@ -293,6 +300,124 @@ function handleCommentKey(e) {
   }
 }
 
+/* ═══════════════════════════════════════════
+   POST COMPOSER LOGIC
+═══════════════════════════════════════════ */
+let selectedPostActivity = 'hangout';
+
+const COMPOSER_ACTIVITIES = [
+  { id: 'gaming',  icon: 'fa-gamepad',      label: 'Gaming'    },
+  { id: 'sport',   icon: 'fa-futbol',       label: 'Sport'     },
+  { id: 'food',    icon: 'fa-utensils',     label: 'Food'      },
+  { id: 'music',   icon: 'fa-music',        label: 'Music'     },
+  { id: 'hangout', icon: 'fa-martini-glass',label: 'Hangout'   },
+  { id: 'study',   icon: 'fa-book-open',    label: 'Study'     },
+];
+
+let attachedImageDataUrl = null;
+
+function triggerImageUpload() {
+  document.getElementById('composer-file-input').click();
+}
+
+function handleImageSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    attachedImageDataUrl = e.target.result;
+    const previewContainer = document.getElementById('composer-img-preview');
+    const previewImg = document.getElementById('composer-preview-img');
+    previewImg.src = attachedImageDataUrl;
+    previewContainer.style.display = 'block';
+    showToast('แนบรูปภาพแล้ว 📷');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeComposerImage() {
+  attachedImageDataUrl = null;
+  document.getElementById('composer-file-input').value = '';
+  const previewContainer = document.getElementById('composer-img-preview');
+  previewContainer.style.display = 'none';
+  document.getElementById('composer-preview-img').src = '';
+  showToast('ยกเลิกการแนบรูปภาพแล้ว');
+}
+
+function openComposer() {
+  const overlay = document.getElementById('composer-overlay');
+  overlay.classList.add('open');
+
+  const chipsEl = document.getElementById('composer-chips');
+  chipsEl.innerHTML = COMPOSER_ACTIVITIES.map(a => `
+    <div class="composer-chip ${selectedPostActivity === a.id ? 'selected' : ''}" onclick="selectComposerActivity('${a.id}', this)">
+      <i class="fa-solid ${a.icon}"></i> ${a.label}
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    document.getElementById('composer-text')?.focus();
+  }, 250);
+}
+
+function closeComposer() {
+  const overlay = document.getElementById('composer-overlay');
+  overlay.classList.remove('open');
+  removeComposerImage();
+}
+
+function selectComposerActivity(id, el) {
+  selectedPostActivity = id;
+  document.querySelectorAll('.composer-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function submitNewPost() {
+  const textInput = document.getElementById('composer-text');
+  const text = textInput.value.trim();
+  const currentImage = attachedImageDataUrl; // Save image reference first!
+
+  if (!text && !currentImage) {
+    showToast('กรุณาพิมพ์ข้อความหรือแนบรูปภาพ');
+    return;
+  }
+
+  const actObj = ACTIVITIES.find(a => a.id === selectedPostActivity) || {
+    id: 'hangout',
+    label: 'Hangout',
+    icon: 'fa-martini-glass'
+  };
+
+  const newPost = {
+    id: Date.now(),
+    user: 'Sanch T.',
+    avatar: 'fa-user',
+    time: 'เพิ่งเมื่อกี้',
+    verified: true,
+    online: true,
+    activity: actObj.id,
+    activityLabel: actObj.label,
+    text: text,
+    location: 'ตำแหน่งของคุณ',
+    distance: '0.0 km',
+    likes: 0,
+    comments: 0,
+    reposts: 0,
+    hasImg: Boolean(currentImage),
+    imgSrc: currentImage || null,
+    commentList: []
+  };
+
+  POSTS.unshift(newPost);
+  textInput.value = '';
+  removeComposerImage();
+  document.getElementById('composer-overlay').classList.remove('open');
+  renderFeed(currentFilter);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('โพสต์รูปและข้อความสำเร็จ! 🚀');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderStories();
   renderFeed('all');
@@ -321,6 +446,73 @@ document.addEventListener('DOMContentLoaded', () => {
       <input type="text" id="comment-input" placeholder="เขียนความคิดเห็นของคุณ..." onkeydown="handleCommentKey(event)" />
       <button class="comment-send-btn" onclick="submitComment()">
         <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Post Composer Modal -->
+<div class="composer-overlay" id="composer-overlay" onclick="if(event.target===this) closeComposer();">
+  <div class="composer-sheet">
+    <div class="composer-handle"></div>
+    <div class="composer-header">
+      <h3>
+        <i class="fa-solid fa-pen-to-square" style="color:var(--lime);"></i>
+        สร้างโพสต์หาเพื่อน
+      </h3>
+      <button class="icon-btn" style="width:32px;height:32px;" onclick="closeComposer()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="composer-body">
+      <div class="composer-user">
+        <div class="composer-avatar">
+          <i class="fa-solid fa-user" style="color:var(--lime);font-size:1.1rem;"></i>
+        </div>
+        <div>
+          <div class="composer-name">Sanch T.</div>
+          <div class="composer-privacy">
+            <i class="fa-solid fa-earth-americas"></i> ทุกคนในรัศมีใกล้เคียงเห็นได้
+          </div>
+        </div>
+      </div>
+
+      <textarea class="composer-textarea" id="composer-text" placeholder="กำลังมองหาเพื่อนไปทำอะไรอยู่? เขียนชวนได้เลย เช่น 'ใครว่างตีแบดมินตันเย็นนี้...'"></textarea>
+
+      <!-- Attached Image Preview -->
+      <div class="composer-img-preview" id="composer-img-preview">
+        <img id="composer-preview-img" src="" alt="ภาพตัวอย่าง" />
+        <button type="button" class="composer-img-remove" onclick="removeComposerImage()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--white-70);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-tag" style="color:var(--purple-light);"></i> เลือกกิจกรรมที่เกี่ยวข้อง:
+        </div>
+        <div class="composer-chips" id="composer-chips"></div>
+      </div>
+    </div>
+
+    <!-- Hidden File Input for Image Upload -->
+    <input type="file" id="composer-file-input" accept="image/*" style="display:none;" onchange="handleImageSelected(event)" />
+
+    <div class="composer-toolbar">
+      <div class="composer-tools">
+        <button class="composer-tool-btn" type="button" onclick="triggerImageUpload()" title="เพิ่มรูปภาพ">
+          <i class="fa-solid fa-image" style="color:var(--lime);"></i>
+        </button>
+        <button class="composer-tool-btn" type="button" onclick="showToast('ปักหมุดพิกัดปัจจุบัน')" title="ปักหมุดพิกัด">
+          <i class="fa-solid fa-location-dot"></i>
+        </button>
+        <button class="composer-tool-btn" type="button" onclick="showToast('เพิ่มอิโมจิ')" title="เพิ่มอิโมจิ">
+          <i class="fa-solid fa-face-smile"></i>
+        </button>
+      </div>
+      <button class="post-submit-btn" type="button" onclick="submitNewPost()">
+        <i class="fa-solid fa-paper-plane"></i> โพสต์
       </button>
     </div>
   </div>
